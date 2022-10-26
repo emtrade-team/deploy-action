@@ -62,7 +62,7 @@ runs:
 
     # Configure AWS credentials
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v1.7.0
       with:
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
         aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
@@ -71,7 +71,7 @@ runs:
     # Login to ECR
     - name: Login to Amazon ECR
       id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+      uses: aws-actions/amazon-ecr-login@v1.5.2
 
     # Build docker image and push it to ECR
     - name: Build, tag, and push image to Amazon ECR
@@ -93,7 +93,7 @@ runs:
     # Replace image on task definition
     - name: Create task definition revision
       id: render-image
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      uses: aws-actions/amazon-ecs-render-task-definition@v1.1.2
       with:
         task-definition: task-definition.json
         container-name: ${{ inputs.container-name }}
@@ -101,7 +101,7 @@ runs:
 
     # Deploy task definition
     - name: Deploy task definition to service
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1.4.10
       with:
         task-definition: ${{ steps.render-image.outputs.task-definition }}
         service: ${{ inputs.service }}
