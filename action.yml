@@ -43,8 +43,8 @@ runs:
   steps:
     - name: Create .npmrc
       run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ inputs.github-token }}" >> ~/.npmrc
-          echo "${{ inputs.github-scope }}:registry=https://npm.pkg.github.com" >> ~/.npmrc
+        echo "//npm.pkg.github.com/:_authToken=${{ inputs.github-token }}" >> ~/.npmrc
+        echo "${{ inputs.github-scope }}:registry=https://npm.pkg.github.com" >> ~/.npmrc
       shell: bash
     # Runs a packages install
     - name: Running package install
@@ -62,7 +62,7 @@ runs:
 
     # Configure AWS credentials
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1-node16
+      uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
         aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
@@ -79,8 +79,12 @@ runs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ inputs.ecr-repository }}
         IMAGE_TAG: ${{ inputs.image-tag }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker buildx create --use
+        docker buildx build --platform linux/amd64,linux/arm64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --build-arg PKG_AUTH_TOKEN=$GITHUB_TOKEN .
+
+        #docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --build-arg PKG_AUTH_TOKEN=$GITHUB_TOKEN .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       shell: bash
 
