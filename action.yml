@@ -34,6 +34,9 @@ inputs:
   aws-region:
     description: "Aws region"
     required: true
+  build-app:
+    description: "Should build app by running yarn build"
+    default: false
 
 runs:
   using: "composite"
@@ -46,6 +49,15 @@ runs:
     # Runs a packages install
     - name: Running package install
       run: yarn
+      shell: bash
+
+    # Builds the app if requested
+    - name: Build the app if requested
+      run: |
+        if [[ "${{ inputs.build-app }}" ]]; then
+          yarn build
+        fi
+        exit 0
       shell: bash
 
     # Configure AWS credentials
@@ -67,8 +79,9 @@ runs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ inputs.ecr-repository }}
         IMAGE_TAG: ${{ inputs.image-tag }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --build-arg PKG_AUTH_TOKEN=$GITHUB_TOKEN .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       shell: bash
 
