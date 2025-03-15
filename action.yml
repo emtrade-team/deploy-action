@@ -82,9 +82,13 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
         docker buildx create --use
-        docker buildx build --platform linux/amd64,linux/arm64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --build-arg PKG_AUTH_TOKEN=$GITHUB_TOKEN .
+        docker buildx build \
+          --platform linux/amd64,linux/arm64 \
+          --build-arg PAYLOAD_SECRET=${{ secrets.PAYLOAD_SECRET }} \
+          --build-arg DATABASE_URI=${{ secrets.DATABASE_URI }} \
+          -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+          --build-arg PKG_AUTH_TOKEN=$GITHUB_TOKEN .
 
-        #docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --build-arg PKG_AUTH_TOKEN=$GITHUB_TOKEN .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       shell: bash
 
@@ -110,3 +114,10 @@ runs:
         task-definition: ${{ steps.render-image.outputs.task-definition }}
         service: ${{ inputs.service }}
         cluster: ${{ inputs.cluster }}
+        override-container-commands: |
+          - name: ${{ inputs.container-name }}
+            environment:
+              - name: PAYLOAD_SECRET
+                value: ${{ secrets.PAYLOAD_SECRET }}
+              - name: DATABASE_URI
+                value: ${{ secrets.DATABASE_URI }}
